@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<bitfields product="dbtech_vbdonate">
+	<bitfielddefs>	
+		<group name="nocache">
+			<group name="dbtech_vbdonate_show_ql">
+				<bitfield name="dbtech_vbdonate_quicklinks"		>1</bitfield>				
+				<bitfield name="dbtech_vbdonate_community"		>2</bitfield>				
+			</group>									
+		</group>
+	</bitfielddefs>
+</bitfields>
