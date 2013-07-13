@@ -77,8 +77,8 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 						'Amount'		 => $amount
 						)
 			));
-	$RefID = $res['RefID'];
-	$res = $res['Status'];
+	$RefID = $res->RefID;
+	$res = $res->Status;
 	if ($res !='100')
 	{
 		// Invalid payment
