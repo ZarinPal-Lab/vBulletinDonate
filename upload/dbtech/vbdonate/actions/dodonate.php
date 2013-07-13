@@ -121,8 +121,19 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 $merchantID = $vbulletin->options['dbtech_vbdonate_email'];
 $amount =$vbulletin->GPC['amount'];
 $callBackUrl = $vbulletin->options['bburl'].'/vbdonate_gateway.php?number='.$donation_data['donations_id'];
-$client = new nusoap_client('http://www.zarinpal.com/WebserviceGateway/wsdl', 'wsdl');
-$res = $client -> call('PaymentRequest', array($merchantID, $amount, $callBackUrl, urlencode('حمایت از سایت')));
-$url='https://www.zarinpal.com/users/pay_invoice/'.$res;
+$client = new nusoap_client('https://www.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
+$res = $client -> call('PaymentRequest', array(
+	array(
+	'MerchantID' 	=> $merchantID ,
+	'Amount' 		=> $amount ,
+	'Description' 	=> 'حمایت از سایت' ,
+	'Email' 		=> '' ,
+	'Mobile' 		=> '' ,
+	'CallbackURL' 	=> $callBackUrl
+
+		)
+	
+	));
+$url='https://www.zarinpal.com/pg/StartPay/' . $res->Authority;
 exec_header_redirect($url);
 ?>
