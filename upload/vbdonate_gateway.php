@@ -69,7 +69,7 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 	$merchantID =$vbulletin->options['dbtech_vbdonate_email'];
 	$amount = $transaction['amount'];
 	$au = $_GET['Authority'];	
-	$client = new nusoap_client('https://www.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
+	$client = new nusoap_client('https://de.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
 	$res = $client->call("PaymentVerification", array(
 			array(
 						'MerchantID'	 => $merchantID ,
