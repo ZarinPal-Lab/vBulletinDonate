@@ -121,7 +121,7 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 $merchantID = $vbulletin->options['dbtech_vbdonate_email'];
 $amount =$vbulletin->GPC['amount'];
 $callBackUrl = $vbulletin->options['bburl'].'/vbdonate_gateway.php?number='.$donation_data['donations_id'];
-$client = new nusoap_client('https://www.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
+$client = new nusoap_client('https://de.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
 $res = $client -> call('PaymentRequest', array(
 	array(
 	'MerchantID' 	=> $merchantID ,
