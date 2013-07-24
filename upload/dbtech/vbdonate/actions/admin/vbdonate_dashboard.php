@@ -42,6 +42,7 @@ print_table_header($vbphrase['dbtech_vbdonate_dashboard_cpheader'], 5);
 				$general_settings9 = '<a href="options.php?do=options&amp;dogroup=dbtech_vbdonate_sideblock" ><center><img src="../dbtech/vbdonate/images/admin/'.$vbulletin->options ['dbtech_vbdonate_sideblock_image'].'" border="0" /></center><center>' . $vbphrase['dbtech_vbdonate_sideblock_set'] . '</center></a> ';
 				$general_settings10 = '<a href="options.php?do=options&amp;dogroup=dbtech_vbdonate_postbit" ><center><img src="../dbtech/vbdonate/images/admin/'.$vbulletin->options ['dbtech_vbdonate_postbit_image_set'].'" border="0" /></center><center>' . $vbphrase['dbtech_vbdonate_postbit_set'] . '</center></a> ';
 				$general_settings11 = '<a href="options.php?do=options&amp;dogroup=dbtech_vbdonate_auto_post" ><center><img src="../dbtech/vbdonate/images/admin/'.$vbulletin->options ['dbtech_vbdonate_genset_image'].'" border="0" /></center><center>' . $vbphrase['dbtech_vbdonate_auto_post_settings'] . '</center></a> ';
+				$general_settings12 = '<center><iframe src="http://hamyar.org/download/dl.php?do=vr&plugin=zpd&old_vr=1.4"  frameborder="0"></iframe><a href="http://donate.hamyar.org/">حمایت مالی نویسنده پلاگین</a></cente>';
 			}
 		}							
 print_cells_row(array($general_settings1,$general_settings2,$general_settings3,$general_settings4), false);
