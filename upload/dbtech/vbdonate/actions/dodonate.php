@@ -135,5 +135,10 @@ $res = $client -> call('PaymentRequest', array(
 	
 	));
 $url='https://www.zarinpal.com/pg/StartPay/' . $res->Authority;
-exec_header_redirect($url);
+if($res->Status == 100){
+	exec_header_redirect($url);
+}else{
+	echo'ERR: '.$res->Status;
+}
+
 ?>
