@@ -60,7 +60,7 @@ $id=intval($_GET['number']);
  */
 set_time_limit(-1);
 include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
-	if ($_GET['Authority'] != "OK")
+	if ($_GET['Status'] != "OK")
 	{
 		// Invalid payment
 		payment_fail();
@@ -82,6 +82,7 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 	if ($res !='100')
 	{
 		// Invalid payment
+		echo'ERR:'.$res;
 		payment_fail();
 		break;
 	}
