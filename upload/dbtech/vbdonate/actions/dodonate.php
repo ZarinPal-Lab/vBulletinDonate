@@ -113,10 +113,7 @@ if ($vbulletin -> options['dbtech_vbdonate_unconf_contrib_pm_user'] AND $vbullet
 if ($vbulletin -> options['dbtech_vbdonate_staff_pm_enable'] AND $vbulletin -> options['dbtech_vbdonate_pm_enable']) {
 	require_once (DIR . '/dbtech/vbdonate/includes/staff_pm.php');
 }
-/*
- * Mohammad Hossein Abedinpour
- */
-set_time_limit(-1);
+
 include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 $client = new nusoap_client('https://de.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
 $res = $client->call('PaymentRequest', array(
