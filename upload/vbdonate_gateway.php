@@ -46,53 +46,34 @@ require_once(DIR . '/includes/functions_log_error.php');
 // ########################################################################
 // ######################### START MAIN SCRIPT ############################
 // ########################################################################
-if(isset($_GET['number']) && isset($_GET['refID']) && isset($_GET['au'])){
-$id=intval($_GET['number']);
+if(isset($_GET['number']) && $_GET['Status'] == 'OK' && isset($_GET['Authority'])){
+
+	$id = intval($_GET['number']);
+
 	if (!$transaction = $db->query_first("SELECT donation.*, user.username, user.usergroupid, user.membergroupids FROM  `". TABLE_PREFIX ."dbtech_vbdonate_donations` AS donation LEFT JOIN " . TABLE_PREFIX . "user AS user ON (user.userid = donation.userid) WHERE donation.id='$id' AND donation.confirmed = '0' "))
 	{
-
 		payment_fail();
 		break;
-
 	}	
-	/*
- * Mohammad Hossein Abedinpour
- */
-set_time_limit(-1);
-include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
-	if ($_GET['Status'] != "OK")
-	{
-		// Invalid payment
-		payment_fail();
-		break;
-	}
-	$merchantID =$vbulletin->options['dbtech_vbdonate_email'];
-	$amount = $transaction['amount'];
-	$au = $_GET['Authority'];	
+
+	include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
+
 	$client = new nusoap_client('https://de.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
-	$res = $client->call("PaymentVerification", array(
-			array(
-						'MerchantID'	 => $merchantID ,
-						'Authority' 	 => $au ,
-						'Amount'		 => $amount
-						)
-			));
-	$RefID = $res->RefID;
-	$res = $res->Status;
-	if ($res !='100')
-	{
-		// Invalid payment
-		echo'ERR:'.$res;
-		payment_fail();
-		break;
-	}
-	if ($res==100)
+	$res = $client->call('PaymentVerification', array(
+														array(
+																'MerchantID'	 => $vbulletin->options['dbtech_vbdonate_email'],
+																'Authority' 	 => $_GET['Authority'],
+																'Amount'		 => $transaction['amount']
+															 )
+													)
+						);
+	if ($res['Status'] == 100)
 	{
 		$db->query_write("
 			UPDATE " . TABLE_PREFIX . "dbtech_vbdonate_donations
 			SET 
 				confirmed = '1',
-				response = " . $db->sql_prepare('REFID => '.$RefID.' AU => '.$_GET['Authority']) . "
+				response = " . $db->sql_prepare('REFID => '. $res['RefID'] .' AU => '.$_GET['Authority']) . "
 			WHERE id = " . intval($transaction['id'])
 		);
 		
@@ -115,8 +96,6 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 			switch ($vbulletin->options['dbtech_vbdonate_usergroup_type'])
 			{
 				case 1:
-
-
 					// Update membergroups, displaygroupid and usertitle as needed
 					$db->query_write("
 						UPDATE " . TABLE_PREFIX . "user 
@@ -127,16 +106,16 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 						WHERE userid = '" . $transaction['userid'] . "'
 					");
 					// Update ranks as needed					
-				if ($vbulletin->options['dbtech_vbdonate_ranks_enabled'])
-				{					
-					$new_rank = $vbulletin->options['dbtech_vbdonate_postbit_awards_img'];
-					$db->query_write(" 
-						UPDATE " . TABLE_PREFIX . "usertextfield 
-						SET 
-							rank = '<img src=\"images/ranks/$new_rank\" alt=\"\" border=\"\" />' 
-						WHERE usertextfield.userid = '" . $transaction['userid'] . "' 
-					");
-				}
+					if ($vbulletin->options['dbtech_vbdonate_ranks_enabled'])
+					{					
+						$new_rank = $vbulletin->options['dbtech_vbdonate_postbit_awards_img'];
+						$db->query_write(" 
+							UPDATE " . TABLE_PREFIX . "usertextfield 
+							SET 
+								rank = '<img src=\"images/ranks/$new_rank\" alt=\"\" border=\"\" />' 
+							WHERE usertextfield.userid = '" . $transaction['userid'] . "' 
+						");
+					}
 					break;
 
 				case 2:
@@ -151,16 +130,16 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 						WHERE userid = '" . $transaction['userid'] . "'
 					");
 					// Update ranks as needed					
-				if ($vbulletin->options['dbtech_vbdonate_ranks_enabled'])
-				{					
-					$new_rank = $vbulletin->options['dbtech_vbdonate_postbit_awards_img'];
-					$db->query_write(" 
-						UPDATE " . TABLE_PREFIX . "usertextfield 
-						SET 
-							rank = '<img src=\"images/ranks/$new_rank\" alt=\"\" border=\"\" />' 
-						WHERE usertextfield.userid = '" . $transaction['userid'] . "' 
-					");	
-				}				
+					if ($vbulletin->options['dbtech_vbdonate_ranks_enabled'])
+					{					
+						$new_rank = $vbulletin->options['dbtech_vbdonate_postbit_awards_img'];
+						$db->query_write(" 
+							UPDATE " . TABLE_PREFIX . "usertextfield 
+							SET 
+								rank = '<img src=\"images/ranks/$new_rank\" alt=\"\" border=\"\" />' 
+							WHERE usertextfield.userid = '" . $transaction['userid'] . "' 
+						");	
+					}				
 					break;
 			}
 		}
@@ -168,10 +147,6 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 
 		do
 		{
-			
-
-
-
 			switch ($vbulletin->options['dbtech_vbdonate_dateformat'])
 			{
 				case 1: $dateFormat = 'd-m-y, H:i'; break;
@@ -195,15 +170,16 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 
 			// Send pm
 			$pmdm =& datamanager_init('PM', $vbulletin, ERRTYPE_ARRAY);
-				$pmdm->set_info('is_automated', true); // implies overridequota
-				$pmdm->set('fromuserid', 	$sender['userid']);
-				$pmdm->set('fromusername', 	$sender['username']);
-				$pmdm->set_recipients($transaction['username'], $pmperms, 'cc');
-				$pmdm->setr('title', 		$subject);
-				$pmdm->setr('message', 		$message);
-				$pmdm->set('dateline', 		TIMENOW);
-				$pmdm->set('showsignature', 1);
-				$pmdm->set('allowsmilie', 	0);
+			$pmdm->set_info('is_automated', true); // implies overridequota
+			$pmdm->set('fromuserid', 	$sender['userid']);
+			$pmdm->set('fromusername', 	$sender['username']);
+			$pmdm->set_recipients($transaction['username'], $pmperms, 'cc');
+			$pmdm->setr('title', 		$subject);
+			$pmdm->setr('message', 		$message);
+			$pmdm->set('dateline', 		TIMENOW);
+			$pmdm->set('showsignature', 1);
+			$pmdm->set('allowsmilie', 	0);
+			
 			if (!$pmdm->pre_save())
 			{
 				// We had errors
@@ -221,8 +197,6 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 	
 		do
 		{
-		
-
 			if (!$transaction['userid'])
 			{
 				// This is a guest donation
@@ -272,9 +246,7 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 					// We had errors
 					payment_fail();
 					continue;
-				}
-				else
-				{
+				} else {
 					// No errors, yay
 					$pmdm->save();
 					unset($pmdm);
@@ -289,8 +261,11 @@ include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
 		// Handled
 		print_standard_redirect('hamyar_zarinpal_success', true, true);  
 		break;
+	} else {
+		echo 'ERR:'. $res['Status'];
+		payment_fail();
 	}
-}else{
+} else {
 	payment_fail();
 }
 function payment_fail(){
