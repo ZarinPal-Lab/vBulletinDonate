@@ -118,27 +118,22 @@ if ($vbulletin -> options['dbtech_vbdonate_staff_pm_enable'] AND $vbulletin -> o
  */
 set_time_limit(-1);
 include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
-$merchantID = $vbulletin->options['dbtech_vbdonate_email'];
-$amount =$vbulletin->GPC['amount'];
-$callBackUrl = $vbulletin->options['bburl'].'/vbdonate_gateway.php?number='.$donation_data['donations_id'];
 $client = new nusoap_client('https://de.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
-$res = $client -> call('PaymentRequest', array(
-	array(
-	'MerchantID' 	=> $merchantID ,
-	'Amount' 		=> $amount ,
-	'Description' 	=> 'حمایت از سایت' ,
-	'Email' 		=> '' ,
-	'Mobile' 		=> '' ,
-	'CallbackURL' 	=> $callBackUrl
-
-		)
-	
-	));
-$url='https://www.zarinpal.com/pg/StartPay/' . $res->Authority;
-if($res->Status == 100){
-	exec_header_redirect($url);
+$res = $client->call('PaymentRequest', array(
+												array(
+														'MerchantID' 	=> $vbulletin->options['dbtech_vbdonate_email'],
+														'Amount' 		=> $vbulletin->GPC['amount'],
+														'Description' 	=> 'حمایت از سایت',
+														'Email' 		=> '',
+														'Mobile' 		=> '',
+														'CallbackURL' 	=> $vbulletin->options['bburl'].'/vbdonate_gateway.php?number='. $donation_data['donations_id']
+													)
+											)
+					);
+if($res['Status'] == 100){
+	exec_header_redirect('https://www.zarinpal.com/pg/StartPay/' . $res['Authority']);
 }else{
-	echo'ERR: '.$res->Status;
+	echo 'ERR: '. $res['Status'];
 }
 
 ?>
