@@ -46,34 +46,41 @@ require_once(DIR . '/includes/functions_log_error.php');
 // ########################################################################
 // ######################### START MAIN SCRIPT ############################
 // ########################################################################
-if(isset($_GET['number']) && $_GET['Status'] == 'OK' && isset($_GET['Authority'])){
+if(isset($_GET['number']) && $_GET['Status'] == 'OK'  && isset($_GET['Authority'])){
 
 	$id = intval($_GET['number']);
+	$transaction = $db->query_first("SELECT donation.*, user.username, user.usergroupid, user.membergroupids FROM  `". TABLE_PREFIX ."dbtech_vbdonate_donations` AS donation LEFT JOIN " . TABLE_PREFIX . "user AS user ON (user.userid = donation.userid) WHERE donation.id='$id' AND donation.confirmed = '0' ");
 
 	if (!$transaction = $db->query_first("SELECT donation.*, user.username, user.usergroupid, user.membergroupids FROM  `". TABLE_PREFIX ."dbtech_vbdonate_donations` AS donation LEFT JOIN " . TABLE_PREFIX . "user AS user ON (user.userid = donation.userid) WHERE donation.id='$id' AND donation.confirmed = '0' "))
 	{
 		payment_fail();
-		break;
-	}	
+	}
 
-	include_once (DIR.'/dbtech/vbdonate/actions/nusoap.php');
+	$data = array("merchant_id" => $vbulletin->options['dbtech_vbdonate_email'], "authority" => $_GET['Authority'], "amount" => intval($transaction['amount'] * 10));
+	$jsonData = json_encode($data);
+	$ch = curl_init('https://api.zarinpal.com/pg/v4/payment/verify.json');
+	curl_setopt($ch, CURLOPT_USERAGENT, 'ZarinPal Rest Api v4');
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+		'Content-Type: application/json',
+		'Content-Length: ' . strlen($jsonData)
+	));
 
-	$client = new nusoap_client('https://de.zarinpal.com/pg/services/WebGate/wsdl', 'wsdl');
-	$res = $client->call('PaymentVerification', array(
-														array(
-																'MerchantID'	 => $vbulletin->options['dbtech_vbdonate_email'],
-																'Authority' 	 => $_GET['Authority'],
-																'Amount'		 => $transaction['amount']
-															 )
-													)
-						);
-	if ($res['Status'] == 100)
+	$result = curl_exec($ch);
+	$err = curl_error($ch);
+	curl_close($ch);
+	$result = json_decode($result, true);
+
+
+	if ($result['data']['code'] == 100)
 	{
 		$db->query_write("
 			UPDATE " . TABLE_PREFIX . "dbtech_vbdonate_donations
 			SET 
 				confirmed = '1',
-				response = " . $db->sql_prepare('REFID => '. $res['RefID'] .' AU => '.$_GET['Authority']) . "
+				response = " . $db->sql_prepare('REFID => '. $result['data']['ref_id'] .' AU => '.$_GET['Authority']) . "
 			WHERE id = " . intval($transaction['id'])
 		);
 		
@@ -260,9 +267,9 @@ if(isset($_GET['number']) && $_GET['Status'] == 'OK' && isset($_GET['Authority']
 
 		// Handled
 		print_standard_redirect('hamyar_zarinpal_success', true, true);  
-		break;
+
 	} else {
-		echo 'ERR:'. $res['Status'];
+		echo 'ERR:'. $err;
 		payment_fail();
 	}
 } else {
