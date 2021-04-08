@@ -117,7 +117,7 @@ if ($vbulletin->options['dbtech_vbdonate_staff_pm_enable'] and $vbulletin->optio
 
 $data = array(
     'merchant_id' => $vbulletin->options['dbtech_vbdonate_email'],
-   'amount' => $vbulletin->GPC['amount'] * 10,
+    'amount' => $vbulletin->GPC['amount'] * 10,
     'description' => 'حمایت از سایت',
     'callback_url' => $vbulletin->options['bburl'] . '/vbdonate_gateway.php?number=' . $donation_data['donations_id']
 );
@@ -139,7 +139,15 @@ $result = json_decode($result, true, JSON_PRETTY_PRINT);
 curl_close($ch);
 
 if ($result['data']['code'] == 100) {
-    header('Location: https://www.zarinpal.com/pg/StartPay/' . $result['data']["authority"]);
+    echo' <html><body>
+                    <script type="text/javascript" src="https://cdn.zarinpal.com/zarinak/v1/checkout.js"></script>
+                    <script type="text/javascript">
+                    window.onload = function () {
+                    Zarinak.setAuthority("' . $result['data']['authority'] . '");
+                    Zarinak.showQR();
+                    Zarinak.open();
+                };
+                </script></body></html>';
 } else {
     echo 'ERR: ' . $result['errors']['code'];
 }

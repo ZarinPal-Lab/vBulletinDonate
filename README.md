@@ -1,2 +1,2 @@
-WebGate-VBDonate
+ZarinpalQR-VBDonate
 ================
